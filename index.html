@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="7 Min Cardio">
+<meta name="theme-color" content="#FFF3E3">
+<title>7 Minute Cardio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ground:#FFF3E3;
+    --card:#FFFFFF;
+    --ink:#1F1A2E;
+    --muted:#6B6378;
+    --line:#EADFCF;
+    --tomato:#F2542D;
+    --sun:#FFC53D;
+    --track:#F4E6D2;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--ground);color:var(--ink)}
+  body{
+    font-family:"Bricolage Grotesque",ui-rounded,system-ui,-apple-system,sans-serif;
+    height:100vh;height:100dvh;overflow:hidden;
+    padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + var(--ctl) + 20px);
+    -webkit-font-smoothing:antialiased;
+    -webkit-user-select:none;user-select:none;
+    --ctl:clamp(50px,7.5dvh,64px);
+    --ring:clamp(110px,21dvh,200px);
+    --gap:clamp(8px,1.6dvh,16px);
+  }
+  .wrap{max-width:460px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:var(--gap)}
+
+  /* header */
+  header{flex:none;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:0 2px}
+  h1{margin:0;font-weight:800;font-size:clamp(24px,4.4dvh,40px);line-height:.92;letter-spacing:-.03em}
+  h1 .seven{color:var(--tomato);position:relative;display:inline-block}
+  h1 .seven sup{font-size:.45em;position:absolute;top:-.1em;right:-.5em;color:var(--ink)}
+  .chip{font-size:13px;font-weight:600;background:var(--ink);color:var(--ground);border-radius:999px;padding:7px 12px;white-space:nowrap}
+
+  /* timer card */
+  .timer{
+    flex:none;background:var(--card);border-radius:24px;padding:clamp(10px,1.8dvh,18px) 16px;
+    box-shadow:0 1px 0 var(--line),0 10px 30px -18px rgba(31,26,46,.35);
+    display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;
+  }
+  .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+  .ring{flex:none;position:relative;width:var(--ring);height:var(--ring)}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring .bg{stroke:var(--track)}
+  .ring .fg{stroke:var(--tomato);transition:stroke .3s}
+  .ring.hot .fg{stroke:var(--ink)}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .time{font-size:calc(var(--ring) * .29);font-weight:800;letter-spacing:-.04em;font-variant-numeric:tabular-nums;line-height:1}
+  .ring.hot .time{animation:thump 1s ease-out infinite}
+  .step{font-size:clamp(11px,1.7dvh,14px);font-weight:600;color:var(--muted);letter-spacing:.02em}
+  .now{font-size:clamp(18px,3dvh,26px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+  .next{font-size:clamp(12px,1.9dvh,15px);color:var(--muted);line-height:1.25}
+  .next b{color:var(--ink);font-weight:600}
+  @keyframes thump{0%{transform:scale(1.08)}40%{transform:scale(1)}}
+
+  /* list */
+  ol{flex:1;min-height:0;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(4px,.8dvh,8px)}
+  li{
+    flex:1 1 0;min-height:0;max-height:64px;
+    display:flex;align-items:center;gap:12px;
+    background:var(--card);border-radius:clamp(10px,1.8dvh,18px);padding:0 12px;
+    font-size:clamp(14px,2.3dvh,18px);font-weight:600;letter-spacing:-.01em;
+    transition:transform .25s cubic-bezier(.2,1.4,.4,1),background .25s,opacity .25s;
+    position:relative;
+  }
+  li .num{
+    flex:none;width:var(--icon);height:var(--icon);border-radius:50%;display:grid;place-items:center;
+    background:var(--track);font-weight:800;font-size:clamp(12px,2dvh,16px);
+  }
+  li .name{flex:1}
+  li .tag{font-size:12px;font-weight:600;color:var(--muted);border:1.5px dashed var(--line);border-radius:999px;padding:3px 8px}
+  li .bar{position:absolute;left:12px;right:12px;bottom:3px;height:3px;border-radius:4px;background:rgba(31,26,46,.12);overflow:hidden;display:none}
+  li .bar i{display:block;height:100%;background:var(--ink);width:0}
+  li.active{background:var(--sun);transform:scale(1.03)}
+  li.active .num{background:var(--ink);color:var(--sun);animation:wiggle 1.2s ease-in-out infinite}
+  li.active .bar{display:block}
+  li.active .tag{border-color:rgba(31,26,46,.35);color:var(--ink)}
+  li.done{opacity:.5}
+  li.done .name{text-decoration:line-through;text-decoration-thickness:2px}
+  li.done .num{background:var(--ink);color:var(--ground)}
+  body{--icon:clamp(22px,3.6dvh,32px)}
+  svg.ex{flex:none;width:var(--icon);height:var(--icon);fill:none;stroke:var(--tomato);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  li.active svg.ex{stroke:var(--ink)}
+  body.running li.active svg.ex, body.running .nowrow svg.ex{animation:hop .9s ease-in-out infinite}
+  .nowrow{display:flex;align-items:center;gap:8px}
+  .nowrow svg.ex{width:calc(var(--icon) + 4px);height:calc(var(--icon) + 4px)}
+  @keyframes hop{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-5px) rotate(-8deg)}60%{transform:translateY(0) rotate(6deg)}}
+  @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+
+  .foot{flex:none;margin:0;font-size:12px;color:var(--muted);text-align:center}
+
+  /* controls */
+  .controls{
+    position:fixed;left:0;right:0;bottom:0;
+    padding:0 16px calc(env(safe-area-inset-bottom) + 12px);
+    display:flex;justify-content:center;
+  }
+  .controls .row{max-width:460px;width:100%;display:flex;gap:10px;align-items:center}
+  button{font:inherit;border:0;cursor:pointer;color:inherit}
+  .go{
+    flex:1;height:var(--ctl);border-radius:999px;background:var(--ink);color:var(--ground);
+    font-size:clamp(18px,2.8dvh,22px);font-weight:800;letter-spacing:-.01em;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    box-shadow:0 8px 20px -10px rgba(31,26,46,.6);
+    transition:transform .12s;
+  }
+  .go:active{transform:scale(.97)}
+  .go.running{background:#D4401B;color:#fff}
+  .ghost{
+    width:var(--ctl);height:var(--ctl);border-radius:50%;background:var(--card);
+    display:grid;place-items:center;box-shadow:0 1px 0 var(--line);
+  }
+  .ghost:active{transform:scale(.95)}
+  .ghost:disabled{opacity:.35}
+  svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+  .go svg.i{fill:currentColor;stroke:none;width:22px;height:22px}
+
+  /* finish overlay */
+  .finish{
+    position:fixed;inset:0;background:var(--ink);color:var(--ground);
+    display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    padding:32px;text-align:center;z-index:10;overflow:hidden;
+  }
+  .finish.show{display:flex;animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+  .finish h2{margin:0;font-size:56px;font-weight:800;letter-spacing:-.04em;line-height:.95}
+  .finish p{margin:0;font-size:18px;color:#D9D2C6;max-width:300px}
+  .finish button{margin-top:12px;height:56px;padding:0 28px;border-radius:999px;background:var(--sun);color:var(--ink);font-size:18px;font-weight:800}
+  .confetti{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+  @keyframes pop{from{transform:scale(.9);opacity:0}}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="seven">7<sup>*</sup></span> Minute<br>Cardio</h1>
+    <span class="chip" id="total">8:00 left</span>
+  </header>
+
+  <section class="timer" aria-live="polite">
+    <div class="ring" id="ring">
+      <svg viewBox="0 0 228 228" aria-hidden="true">
+        <circle class="bg" cx="114" cy="114" r="100" fill="none" stroke-width="16"/>
+        <circle class="fg" id="arc" cx="114" cy="114" r="100" fill="none" stroke-width="16" stroke-linecap="round"
+          stroke-dasharray="628.32" stroke-dashoffset="0"/>
+      </svg>
+      <div class="ring-center">
+        <div class="time" id="time">1:00</div>
+        <div class="step" id="step">Ready?</div>
+      </div>
+    </div>
+    <div class="info">
+      <div class="nowrow">
+        <svg class="ex" viewBox="0 0 32 32" aria-hidden="true"><path id="nowIcon" d=""/></svg>
+        <div class="now" id="now">Bunny Hop</div>
+      </div>
+      <div class="next" id="next">Tap start when you’re ready</div>
+    </div>
+  </section>
+
+  <ol id="list"></ol>
+
+  <p class="foot">* 7 minutes, give or take a minute.</p>
+</div>
+
+<div class="controls">
+  <div class="row">
+    <button class="ghost" id="reset" aria-label="Restart">
+      <svg class="i" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    </button>
+    <button class="go" id="go"><span id="goIcon"></span><span id="goLabel">Start</span></button>
+    <button class="ghost" id="skip" aria-label="Skip to next">
+      <svg class="i" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7z"/><path d="M19 5v14"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="finish" id="finish" role="dialog" aria-label="Workout complete">
+  <h2>7 minutes.<br>Done.</h2>
+  <p>(It was 8. Nobody has to know.)</p>
+  <button id="again">Go again</button>
+</div>
+
+<script>
+(() => {
+  const EXERCISES = [
+    "Bunny Hop",
+    "Full Body Swing",
+    "Arm Swing (Vertical)",
+    "Trunk Twist (Popeye)",
+    "Dead Arms",
+    "Golf Twist",
+    "High 5 March",
+    "Side to Side Squat"
+  ];
+  // Tiny line drawings, one per exercise (32×32 viewBox)
+  const ICONS = [
+    "M13 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0M14.5 6.6L13 1.5M17.5 6.6L19 1.5M16 12v7M16 14l-5-3M16 14l5-3M16 19l-3 3 2 2.5M16 19l3 3-2 2.5M10 29h4M18 29h4", // bunny-eared hopper
+    "M7 8a3 3 0 1 0 6 0a3 3 0 1 0-6 0M12 11l6 6M18 17l-5 5 1 6M18 17l-2 5.5 2 5.5M13.5 12.5L12 21M4 11q-1 9 5 11M6.5 20.5l2.5 1.5-1.5 2.5", // big swing
+    "M13 7a3 3 0 1 0 6 0a3 3 0 1 0-6 0M16 10v10M16 20l-4 9M16 20l4 9M16 12.5L20 2M16 12.5L12 21M27 6v11M25 8l2-2 2 2M25 15l2 2 2-2", // up/down arms
+    "M6 28v-7c0-5 3-7 7-7h2c-1-3-2-5-1-8l4-2c2 1 3 3 2 5l-2 1c1 3 3 4 5 5c4 2 4 7 2 10c-2 3-7 3-11 3zM13 21c2-3 7-3 9 0M27 3l2-2M28 8h3", // flexed bicep
+    "M4 9a5 5 0 1 0 10 0a5 5 0 1 0-10 0M6.5 7.5l2 2M8.5 7.5l-2 2M10.5 7.5l2 2M12.5 7.5l-2 2M9 14v8M9 22l-3 8M9 22l3 8M9 16h11q3 0 4 3M9 18.5l10 .5q3 0 4 3M27 11l2-2M28 15h3", // zombie
+    "M5 3l15 21h5M25 28a2 2 0 1 0 4 0a2 2 0 1 0-4 0M3 16q3 11 13 13", // golf club + ball
+    "M10 21V8a2 2 0 0 1 4 0v7M14 15V5a2 2 0 0 1 4 0v10M18 15V7a2 2 0 0 1 4 0v9M22 16v-5a2 2 0 0 1 4 0v10c0 5-4 9-9 9h-2c-3 0-5-1-7-4l-4-6c-1-2 1-4 3-3l3 2M3 7l3 2M6 2l2 3M28 3l-2 3", // high five
+    "M13 6a3 3 0 1 0 6 0a3 3 0 1 0-6 0M16 9v8M16 12l6 1M16 12l-6 1M16 17l-5 3v6M16 17l5 3v6M2 22h5M4 20l-2 2 2 2M30 22h-5M28 20l2 2-2 2" // side squat
+  ];
+  const DUR = 60 * 1000;
+  const BEEP_FROM = 5; // beep on the last 5 seconds
+  const CIRC = 2 * Math.PI * 100;
+
+  const $ = id => document.getElementById(id);
+  const list = $('list'), arc = $('arc'), ring = $('ring');
+  const PLAY = '<svg class="i" viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg>';
+  const PAUSE = '<svg class="i" viewBox="0 0 24 24"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg>';
+
+  // Build list
+  const rows = EXERCISES.map((name, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="num">${i + 1}</span><svg class="ex" viewBox="0 0 32 32" aria-hidden="true"><path d="${ICONS[i]}"/></svg><span class="name">${name}</span>` +
+      (i === 7 ? `<span class="tag">bonus?</span>` : '') + `<span class="bar"><i></i></span>`;
+    list.appendChild(li);
+    return li;
+  });
+
+  // State
+  let idx = 0, remaining = DUR, running = false, endAt = 0, lastSec = null, started = false, timerId = null;
+
+  // ---------- Audio (iOS-safe) ----------
+  let ctx = null;
+  function unlockAudio() {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = 'playback'; // play even with silent switch (iOS 16.4+)
+    } catch (e) {}
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      ctx = new AC();
+      const b = ctx.createBuffer(1, 1, 22050), s = ctx.createBufferSource();
+      s.buffer = b; s.connect(ctx.destination); s.start(0);
+    }
+    if (ctx.state !== 'running') ctx.resume();
+  }
+  function tone(freq, dur = 0.12, delay = 0, vol = 0.35, type = 'square') {
+    if (!ctx) return;
+    const t = ctx.currentTime + delay;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  const tick = () => tone(880, 0.1, 0, 0.25);
+  const switchSound = () => { tone(1320, 0.12, 0, 0.3); tone(1760, 0.28, 0.13, 0.3); };
+  const fanfare = () => [523, 659, 784, 1047].forEach((f, i) => tone(f, i === 3 ? 0.5 : 0.14, i * 0.14, 0.3, 'triangle'));
+
+  // ---------- Wake lock ----------
+  let wake = null;
+  async function keepAwake(on) {
+    try {
+      if (on && 'wakeLock' in navigator && !wake) {
+        wake = await navigator.wakeLock.request('screen');
+        wake.addEventListener('release', () => { wake = null; });
+      } else if (!on && wake) { await wake.release(); wake = null; }
+    } catch (e) {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && running) { keepAwake(true); unlockAudio(); }
+  });
+
+  // ---------- Render ----------
+  const fmt = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+  function render() {
+    const sec = Math.ceil(remaining / 1000);
+    $('time').textContent = fmt(remaining);
+    arc.style.strokeDashoffset = CIRC * (1 - remaining / DUR);
+    ring.classList.toggle('hot', running && sec <= BEEP_FROM && sec > 0);
+    $('step').textContent = started ? `${idx + 1} of ${EXERCISES.length}` : 'Ready?';
+    $('now').textContent = EXERCISES[idx];
+    $('nowIcon').setAttribute('d', ICONS[idx]);
+    document.body.classList.toggle('running', running);
+    $('next').innerHTML = !started ? 'Tap start when you’re ready'
+      : idx < EXERCISES.length - 1 ? `Next: <b>${EXERCISES[idx + 1]}</b>` : '<b>Last one. Allegedly.</b>';
+    $('total').textContent = `${fmt((EXERCISES.length - idx - 1) * DUR + remaining)} left`;
+    rows.forEach((r, i) => {
+      r.classList.toggle('active', started && i === idx);
+      r.classList.toggle('done', i < idx);
+      if (i === idx) r.querySelector('.bar i').style.width = `${(1 - remaining / DUR) * 100}%`;
+    });
+    const go = $('go');
+    go.classList.toggle('running', running);
+    $('goIcon').innerHTML = running ? PAUSE : PLAY;
+    $('goLabel').textContent = running ? 'Pause' : (started ? 'Resume' : 'Start');
+    $('reset').disabled = !started;
+    $('skip').disabled = !started;
+  }
+
+  function scrollToActive() {
+    // Everything fits on one screen now; nothing to scroll.
+  }
+
+  // ---------- Timer loop ----------
+  function loop() {
+    if (!running) return;
+    remaining = endAt - Date.now();
+    // Catch up (handles phone being backgrounded)
+    while (remaining <= 0) {
+      if (idx >= EXERCISES.length - 1) { finish(); return; }
+      idx++;
+      endAt += DUR;
+      remaining = endAt - Date.now();
+      lastSec = null;
+      switchSound();
+      scrollToActive();
+    }
+    const sec = Math.ceil(remaining / 1000);
+    if (sec !== lastSec) {
+      if (sec <= BEEP_FROM && sec >= 1 && lastSec !== null) tick();
+      lastSec = sec;
+    }
+    render();
+  }
+
+  function start() {
+    unlockAudio();
+    if (!started) { started = true; idx = 0; remaining = DUR; switchSound(); }
+    running = true;
+    endAt = Date.now() + remaining;
+    lastSec = Math.ceil(remaining / 1000);
+    clearInterval(timerId);
+    timerId = setInterval(loop, 100);
+    keepAwake(true);
+    render();
+    scrollToActive();
+  }
+  function pause() {
+    running = false;
+    remaining = Math.max(0, endAt - Date.now());
+    clearInterval(timerId);
+    keepAwake(false);
+    render();
+  }
+  function reset() {
+    running = false; started = false; idx = 0; remaining = DUR; lastSec = null;
+    clearInterval(timerId);
+    keepAwake(false);
+    $('finish').classList.remove('show');
+    render();
+    scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function skip() {
+    if (!started) return;
+    if (idx >= EXERCISES.length - 1) { finish(); return; }
+    idx++; remaining = DUR; lastSec = null;
+    if (running) endAt = Date.now() + DUR;
+    unlockAudio(); switchSound();
+    render(); scrollToActive();
+  }
+  function finish() {
+    running = false; clearInterval(timerId); keepAwake(false);
+    idx = EXERCISES.length; remaining = 0;
+    rows.forEach(r => { r.classList.remove('active'); r.classList.add('done'); });
+    fanfare();
+    const f = $('finish');
+    f.querySelectorAll('.confetti').forEach(c => c.remove());
+    const colors = ['#F2542D', '#FFC53D', '#FFF3E3', '#7FD1B9'];
+    for (let i = 0; i < 70; i++) {
+      const c = document.createElement('span');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[i % colors.length];
+      c.style.animationDuration = 2 + Math.random() * 2.5 + 's';
+      c.style.animationDelay = Math.random() * 0.8 + 's';
+      f.appendChild(c);
+    }
+    f.classList.add('show');
+    idx = EXERCISES.length - 1;
+  }
+
+  $('go').addEventListener('click', () => running ? pause() : start());
+  $('reset').addEventListener('click', reset);
+  $('skip').addEventListener('click', skip);
+  $('again').addEventListener('click', () => { reset(); start(); });
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); running ? pause() : start(); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
