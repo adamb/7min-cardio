@@ -17,7 +17,7 @@ It highlights the current move, counts down each minute, and beeps for the last 
 
 It's a single `index.html` file with no build step.
 
-Made at [Code Puerto Rico](https://code.pr).
+Inspired by [this Instagram reel](https://www.instagram.com/reels/DQFD972ETcB/). Made at [Code Puerto Rico](https://code.pr).
 
 ## Deploy
 
