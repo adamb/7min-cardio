@@ -45,6 +45,9 @@
   h1{margin:0;font-weight:800;font-size:clamp(24px,4.4dvh,40px);line-height:.92;letter-spacing:-.03em}
   h1 .seven{color:var(--tomato);position:relative;display:inline-block}
   h1 .seven sup{font-size:.45em;position:absolute;top:-.1em;right:-.5em;color:var(--ink)}
+  .hdr-r{display:flex;align-items:center;gap:8px}
+  .hs{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--card);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+  .hs svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
   .chip{font-size:13px;font-weight:600;background:var(--ink);color:var(--ground);border-radius:999px;padding:7px 12px;white-space:nowrap}
 
   /* timer card */
@@ -140,7 +143,18 @@
   .finish.show{display:flex;animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
   .finish h2{margin:0;font-size:56px;font-weight:800;letter-spacing:-.04em;line-height:.95}
   .finish p{margin:0;font-size:18px;color:#D9D2C6;max-width:300px}
-  .finish button{margin-top:12px;height:56px;padding:0 28px;border-radius:999px;background:var(--sun);color:var(--ink);font-size:18px;font-weight:800}
+  .finbtns{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+  .finbtns button,.finbtns a{height:56px;padding:0 24px;border-radius:999px;font-size:18px;font-weight:800;display:inline-flex;align-items:center;text-decoration:none}
+  .finbtns button{background:var(--sun);color:var(--ink)}
+  .finbtns a{background:transparent;color:var(--ground);box-shadow:inset 0 0 0 2px var(--ground)}
+  .score{font-size:17px;font-weight:600;color:var(--sun);min-height:1.4em;max-width:320px}
+  .initials{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:4px}
+  .initials label{font-size:14px;color:#D9D2C6}
+  .initials .ini-row{display:flex;gap:10px}
+  .initials input{width:132px;height:56px;border:0;border-radius:14px;background:#2E2842;color:var(--sun);text-align:center;
+    font:800 32px/1 "Bricolage Grotesque",system-ui,sans-serif;letter-spacing:.3em;text-indent:.3em;text-transform:uppercase}
+  .initials input:focus{outline:2px solid var(--sun)}
+  .initials button{height:56px;padding:0 20px;border-radius:14px;background:var(--sun);color:var(--ink);font-size:18px;font-weight:800}
   .confetti{position:absolute;top:-20px;width:10px;height:16px;border-radius:2px;animation:fall linear forwards}
   @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
   @keyframes pop{from{transform:scale(.9);opacity:0}}
@@ -152,7 +166,10 @@
 <div class="wrap">
   <header>
     <h1><span class="seven">7<sup>*</sup></span> Minute<br>Cardio</h1>
-    <span class="chip" id="total">8:00 left</span>
+    <div class="hdr-r">
+      <a class="hs" href="/stats" aria-label="High scores"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8M10 17h4"/></svg></a>
+      <span class="chip" id="total">8:00 left</span>
+    </div>
   </header>
 
   <section class="timer" aria-live="polite">
@@ -196,7 +213,18 @@
 <div class="finish" id="finish" role="dialog" aria-label="Workout complete">
   <h2>7 minutes.<br>Done.</h2>
   <p>(It was 8. Nobody has to know.)</p>
-  <button id="again">Go again</button>
+  <div class="score" id="score" aria-live="polite"></div>
+  <form class="initials" id="iniForm" hidden>
+    <label for="ini">Enter your initials for the high scores</label>
+    <div class="ini-row">
+      <input id="ini" maxlength="3" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="done">
+      <button type="submit">OK</button>
+    </div>
+  </form>
+  <div class="finbtns">
+    <button id="again">Go again</button>
+    <a href="/stats">High scores</a>
+  </div>
 </div>
 
 <script>
@@ -240,8 +268,41 @@
     return li;
   });
 
+  // ---------- Scoreboard (anonymous; fails silently offline) ----------
+  const API = '/api/event';
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  let device = store.get('7mc-device');
+  if (!device) {
+    device = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+    store.set('7mc-device', device);
+  }
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  function send(type, extra = {}, beacon = false) {
+    const body = JSON.stringify({ type, device, day: today(), ...extra });
+    if (beacon && navigator.sendBeacon) {
+      try { navigator.sendBeacon(API, new Blob([body], { type: 'application/json' })); } catch (e) {}
+      return Promise.resolve(null);
+    }
+    return fetch(API, { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true })
+      .then(r => r.ok ? r.json() : null).catch(() => null);
+  }
+  const ordinal = n => n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
+  function showScore(res) {
+    const el = $('score');
+    if (!res) { el.textContent = 'Scoreboard offline. Your sweat still counts.'; return; }
+    if (res.counted === false) { el.textContent = 'Too fast for the scoreboard. It saw that skip button.'; return; }
+    const bits = [`Workout #${res.workouts}`];
+    if (res.streak > 1) bits.push(`${res.streak}-day streak`);
+    if (res.rank) bits.push(`${ordinal(res.rank)} place`);
+    el.textContent = (res.initials && res.initials !== '???' ? res.initials + ': ' : '') + bits.join(' · ');
+  }
+  let lastResult = null;
+
   // State
-  let idx = 0, remaining = DUR, running = false, endAt = 0, lastSec = null, started = false, timerId = null;
+  let idx = 0, remaining = DUR, running = false, endAt = 0, lastSec = null, started = false, done = false, timerId = null;
 
   // ---------- Audio (iOS-safe) ----------
   let ctx = null;
@@ -344,7 +405,7 @@
 
   function start() {
     unlockAudio();
-    if (!started) { started = true; idx = 0; remaining = DUR; switchSound(); }
+    if (!started) { started = true; done = false; idx = 0; remaining = DUR; switchSound(); send('start'); }
     running = true;
     endAt = Date.now() + remaining;
     lastSec = Math.ceil(remaining / 1000);
@@ -362,6 +423,8 @@
     render();
   }
   function reset() {
+    if (started && !done) send('quit', { step: Math.min(idx, EXERCISES.length - 1) });
+    done = false;
     running = false; started = false; idx = 0; remaining = DUR; lastSec = null;
     clearInterval(timerId);
     keepAwake(false);
@@ -378,6 +441,14 @@
     render(); scrollToActive();
   }
   function finish() {
+    done = true;
+    $('score').textContent = '';
+    $('iniForm').hidden = true;
+    send('finish', { initials: store.get('7mc-initials') || undefined }).then(res => {
+      lastResult = res;
+      showScore(res);
+      if (res && res.counted && !store.get('7mc-initials')) { $('iniForm').hidden = false; }
+    });
     running = false; clearInterval(timerId); keepAwake(false);
     idx = EXERCISES.length; remaining = 0;
     rows.forEach(r => { r.classList.remove('active'); r.classList.add('done'); });
@@ -402,6 +473,16 @@
   $('reset').addEventListener('click', reset);
   $('skip').addEventListener('click', skip);
   $('again').addEventListener('click', () => { reset(); start(); });
+  $('iniForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = $('ini').value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
+    if (!v) return;
+    store.set('7mc-initials', v);
+    $('iniForm').hidden = true;
+    $('ini').blur();
+    send('name', { initials: v }).then(res => { if (res) showScore({ ...res, counted: true }); });
+  });
+  addEventListener('pagehide', () => { if (started && !done) send('quit', { step: idx }, true); });
   document.addEventListener('keydown', e => {
     if (e.code === 'Space') { e.preventDefault(); running ? pause() : start(); }
   });

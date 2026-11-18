@@ -2,7 +2,7 @@
 
 A single-page, iPhone-friendly timer for a "7 minute" cardio routine with 8 one-minute exercises. The math is part of the joke.
 
-Live at **https://7.dev.pr**
+Live at **https://7.dev.pr** · High scores at **https://7.dev.pr/stats**
 
 1. Bunny Hop
 2. Full Body Swing
@@ -15,18 +15,55 @@ Live at **https://7.dev.pr**
 
 It highlights the current move, counts down each minute, and beeps for the last 5 seconds before switching to the next move. It fits on one screen and keeps the phone awake while running. On iPhone, use Share → Add to Home Screen to open it full-screen like an app.
 
-It's a single `index.html` file with no build step.
-
 Inspired by [this Instagram reel](https://www.instagram.com/reels/DQFD972ETcB/). Made at [Code Puerto Rico](https://code.pr).
+
+## Layout
+
+```
+public/            static site (index.html, stats.html, icons, manifest)
+functions/api/     Cloudflare Pages Functions
+  event.js         POST /api/event  (start, quit, finish, name)
+  stats.js         GET  /api/stats  (leaderboard and world stats)
+lib/scoreboard.js  shared helpers
+schema.sql         D1 database schema
+wrangler.toml      Pages config and D1 binding
+```
+
+## Scoreboard
+
+The arcade-style high score page lives at `/stats`.
+
+- **No accounts.** Each phone gets a random anonymous ID in `localStorage`. After a workout you can enter 3 initials, arcade style.
+- **Score:** 100 points per minute, so 800 per "7-minute" workout.
+- **Anti-cheat (light):** a finish only counts if the workout ran at least 6.5 minutes. Skipping one exercise still counts (that's the real 7 minutes), but skipping more doesn't.
+- **Streaks** count consecutive days with a finished workout, using the phone's local date.
+- **Where heroes fall:** if you restart or close the page mid-workout, the server records which exercise you quit on.
+- If the API is unreachable, the timer still works and the finish screen just says the scoreboard is offline.
+
+## One-time setup
+
+```bash
+npx wrangler d1 create 7min-cardio
+# paste the database_id it prints into wrangler.toml
+npx wrangler d1 execute 7min-cardio --remote --file schema.sql
+```
 
 ## Deploy
 
 ```bash
-npx wrangler pages deploy . --project-name 7min-cardio
+npx wrangler pages deploy
 ```
 
-## Ideas: usage stats
+This reads `wrangler.toml`, uploads `public/`, and bundles `functions/`. The Pages project's production branch must be `main` for 7.dev.pr to update.
 
-1. **Visits.** Turn on Cloudflare Web Analytics for the Pages project (Workers & Pages → 7min-cardio → Metrics). It needs no code or cookies, and shows page views, visitors, countries, devices and referrers.
-2. **Workouts started and finished.** Add a small Pages Function (`/functions/api/event.js`) backed by D1 or KV. The page pings it anonymously on start, on finish and when someone quits, which gives completion rate and drop-off per exercise. It could also power a public counter: "1,284 workouts done. Around 10,000 minutes. Probably."
-3. **Personal history.** Store completed workouts, streak and total minutes in `localStorage` on each phone. That's private by default and needs no server.
+## Local development
+
+```bash
+npx wrangler d1 execute 7min-cardio --local --file schema.sql
+npx wrangler pages dev
+```
+
+## More ideas
+
+- Turn on Cloudflare Web Analytics (Workers & Pages → 7min-cardio → Metrics) for page views, countries and referrers.
+- Personal history page: a calendar of your workout days.

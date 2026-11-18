@@ -1,0 +1,8 @@
+name = "7min-cardio"
+pages_build_output_dir = "public"
+compatibility_date = "2026-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "7min-cardio"
+database_id = "42d89504-4118-485a-a3d7-8802e9bccf78"
