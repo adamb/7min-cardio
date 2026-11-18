@@ -110,7 +110,7 @@
 
   /* controls */
   .controls{
-    position:fixed;left:0;right:0;bottom:0;
+    position:fixed;left:0;right:0;bottom:0;z-index:6;
     padding:0 16px calc(env(safe-area-inset-bottom) + 12px);
     display:flex;justify-content:center;
   }
@@ -133,6 +133,29 @@
   .ghost:disabled{opacity:.35}
   svg.i{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
   .go svg.i{fill:currentColor;stroke:none;width:22px;height:22px}
+
+  /* Large exercise cues stay behind the timer and workout controls. */
+  .move-overlay{position:fixed;inset:0;z-index:4;background:rgba(255,243,227,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32dvh 20px 110px;pointer-events:none}
+  .move-overlay[hidden]{display:none}
+  .move-overlay svg{width:min(65vw,280px);height:min(32dvh,280px);overflow:visible;fill:none;stroke:var(--tomato);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .move-overlay p{font-size:18px;font-weight:700;text-align:center;margin:16px 0 0}
+  .move-overlay button{pointer-events:auto;margin-top:12px;background:var(--ink);color:var(--ground);padding:10px 18px;border-radius:24px;font:inherit}
+  body.demonstrating header,body.demonstrating .timer{position:relative;z-index:5}
+  .move-overlay path{transform-origin:16px 18px;animation:move-hop .7s ease-in-out infinite alternate}
+  .move-overlay[data-move="1"] path{animation-name:move-swing;animation-duration:1.2s}
+  .move-overlay[data-move="2"] path{animation-name:move-arm;animation-duration:.9s}
+  .move-overlay[data-move="3"] path{animation-name:move-twist;animation-duration:1s}
+  .move-overlay[data-move="4"] path{animation-name:move-swing;animation-duration:1.5s}
+  .move-overlay[data-move="5"] path{animation-name:move-golf;animation-duration:1.2s}
+  .move-overlay[data-move="6"] path{animation-name:move-march;animation-duration:.6s}
+  .move-overlay[data-move="7"] path{animation-name:move-squat;animation-duration:1.1s}
+  @keyframes move-hop{from{transform:translateY(2px) scaleY(.94)}to{transform:translateY(-4px)}}
+  @keyframes move-swing{from{transform:rotate(-18deg)}to{transform:rotate(18deg)}}
+  @keyframes move-arm{from{transform:rotate(-12deg)}to{transform:rotate(12deg)}}
+  @keyframes move-twist{from{transform:perspective(80px) rotateY(-45deg) rotate(-8deg)}to{transform:perspective(80px) rotateY(45deg) rotate(8deg)}}
+  @keyframes move-golf{from{transform:rotate(-35deg)}to{transform:rotate(25deg)}}
+  @keyframes move-march{from{transform:translate(-2px,2px) rotate(-8deg)}to{transform:translate(2px,-2px) rotate(8deg)}}
+  @keyframes move-squat{from{transform:translate(-4px,0)}to{transform:translate(4px,4px) scaleY(.8)}}
 
   /* finish overlay */
   .finish{
@@ -196,6 +219,12 @@
   <ol id="list"></ol>
 
   <p class="foot">* Give or take a minute · Inspired by <a href="https://www.instagram.com/reels/DQFD972ETcB/" target="_blank" rel="noopener">this reel</a> · Made at <a href="https://code.pr" target="_blank" rel="noopener">Code PR</a></p>
+</div>
+
+<div class="move-overlay" id="moveOverlay" hidden aria-label="Animated exercise cue">
+  <svg viewBox="0 0 32 32" aria-hidden="true"><path id="moveIcon"/></svg>
+  <p id="moveName"></p>
+  <button id="hideMove" type="button">Hide animation</button>
 </div>
 
 <div class="controls">
@@ -352,7 +381,15 @@
   // ---------- Render ----------
   const fmt = ms => { const s = Math.ceil(ms / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 
+  let hiddenMove = -1;
+  $('hideMove').addEventListener('click', () => { hiddenMove = idx; render(); });
   function render() {
+    const showMove = running && hiddenMove !== idx;
+    $('moveOverlay').hidden = !showMove;
+    document.body.classList.toggle('demonstrating', showMove);
+    $('moveOverlay').dataset.move = idx;
+    $('moveIcon').setAttribute('d', ICONS[idx]);
+    $('moveName').textContent = EXERCISES[idx];
     const sec = Math.ceil(remaining / 1000);
     $('time').textContent = fmt(remaining);
     arc.style.strokeDashoffset = CIRC * (1 - remaining / DUR);
@@ -423,6 +460,7 @@
     render();
   }
   function reset() {
+    hiddenMove = -1;
     if (started && !done) send('quit', { step: Math.min(idx, EXERCISES.length - 1) });
     done = false;
     running = false; started = false; idx = 0; remaining = DUR; lastSec = null;
@@ -441,6 +479,8 @@
     render(); scrollToActive();
   }
   function finish() {
+    $('moveOverlay').hidden = true;
+    document.body.classList.remove('demonstrating');
     done = true;
     $('score').textContent = '';
     $('iniForm').hidden = true;
