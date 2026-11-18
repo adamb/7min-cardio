@@ -247,7 +247,8 @@
   let ctx = null;
   function unlockAudio() {
     try {
-      if (navigator.audioSession) navigator.audioSession.type = 'playback'; // play even with silent switch (iOS 16.4+)
+      // Mix workout cues with music from other apps; ambient respects iOS silent mode.
+      if (navigator.audioSession) navigator.audioSession.type = 'ambient';
     } catch (e) {}
     if (!ctx) {
       const AC = window.AudioContext || window.webkitAudioContext;
