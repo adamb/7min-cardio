@@ -43,7 +43,7 @@
   .topbar .val{color:var(--white)}
 
   h1{margin:0;text-align:center;font-weight:400;font-size:12px;color:var(--yellow);line-height:1.8}
-  .title-row{display:flex;align-items:center;gap:10px}
+  .title-row{display:flex;flex-direction:column;align-items:center;gap:10px}
   .title-row h1{flex:1;min-width:0}
   .share-btn{flex:none;background:var(--bg);color:var(--yellow);border:2px solid var(--yellow);padding:7px 9px;font:inherit;font-size:8px;line-height:1.4;cursor:pointer}
   .share-btn:focus-visible{outline:2px solid var(--white);outline-offset:3px}
@@ -145,7 +145,7 @@
 <script src="/share.js"></script>
 <script>
 (() => {
-  window.initShareButton('shareButton', 'shareFeedback', 'https://7.dev.pr/stats', '7 Minute Cardio high scores');
+  window.initShareButton?.('shareButton', 'shareFeedback', 'https://7.dev.pr/stats', '7 Minute Cardio high scores');
   const $ = id => document.getElementById(id);
   const COLORS = ['#FF3B3B','#FF9F1C','#FFE14D','#4DFF6A','#3BE8FF','#4D7CFF','#C04DFF','#FF4DC4','#FF9F1C','#4DFF6A'];
   const SHORT = ['BUNNY HOP','BODY SWING','ARM SWING','POPEYE','DEAD ARMS','GOLF TWIST','HIGH 5','SIDE SQUAT'];
