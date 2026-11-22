@@ -15,6 +15,8 @@ Live at **https://7.dev.pr** · High scores at **https://7.dev.pr/stats**
 
 It highlights the current move, counts down each minute, and beeps for the last 5 seconds before switching to the next move. It fits on one screen and keeps the phone awake while running. On iPhone, use Share → Add to Home Screen to open it full-screen like an app.
 
+Use the share button in either page header to share its canonical URL. If native sharing is unavailable or fails, the page copies the link; if clipboard access also fails, it shows a selectable URL.
+
 Inspired by [this Instagram reel](https://www.instagram.com/reels/DQFD972ETcB/). Made at [Code Puerto Rico](https://code.pr).
 
 ## Layout
